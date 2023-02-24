@@ -1,0 +1,56 @@
+version: "3.4"
+services:
+  app:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app:cached
+      - ./virtual_shared:/shared
+    depends_on:
+      - database
+    ports:
+      - 3010:3000
+    tty: true
+    stdin_open: true
+    environment:
+      TERM: dumb
+      JWT_SECRET: "this_is_an_example_secret_key_for_hasura"
+      FRONTEND_URL: http://localhost:3000
+      BACKEND_URL: http://localhost:3010
+  database:
+    image: postgres:14.5
+    volumes:
+      - database:/var/lib/postgresql/data
+    ports:
+      - 5441:5432
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+  graphql-engine:
+    image: hasura/graphql-engine:v2.15.2
+    ports:
+      - 8090:8080
+    depends_on:
+      - database
+    environment:
+      HASURA_GRAPHQL_ADMIN_SECRET: secret
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:@database:5432/app_development
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: query-log
+      HASURA_GRAPHQL_JWT_SECRET: '{"type": "HS256", "key": "this_is_an_example_secret_key_for_hasura"}'
+  mailcatcher:
+    image: dockage/mailcatcher:0.8.2
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+  nginx:
+    image: nginx:latest
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+volumes:
+  database:
