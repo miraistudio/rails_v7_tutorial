@@ -1,37 +1,37 @@
-FROM ruby:3.1.0 as base
+FROM ruby:3.1.2
 
-ENV LANG C.UTF-8
-ENV TZ Asia/Tokyo
-RUN apt-get update -qq && \
-    apt-get install -y \
-      shared-mime-info \
-      nodejs \
-      postgresql-client \
-      git
+ENV BUNDLER_VERSION 2.3.7
+ENV GEM_HOME /usr/local/bundle
+ENV BUNDLE_SILENCE_ROOT_WARNING=1
+ENV BUNDLE_APP_CONFIG="$GEM_HOME"
+ENV PATH $GEM_HOME/bin:$PATH
+
+RUN apt-get update -qq
+
+RUN apt-get install -y \
+    nodejs \
+    tzdata \
+    libxslt-dev \
+    make \
+    gcc \
+    libc-dev \
+    libxml2 \
+    postgresql-client \
+    npm \
+    nano \
+    vim
+
+RUN rm -rf /var/lib/apt/lists*
+RUN npm install --global yarn
+
+RUN gem install bundler:${BUNDLER_VERSION}
+
+RUN mkdir -p ${GEM_HOME} && chmod 777 ${GEM_HOME}
 
 WORKDIR /app
-COPY Gemfile /app/Gemfile
-COPY Gemfile.lock /app/Gemfile.lock
-RUN bundle install
-COPY . /app
-
-FROM base as development
 
 COPY entrypoint.sh /usr/bin/
 RUN chmod +x /usr/bin/entrypoint.sh
 
-ENTRYPOINT ["entrypoint.sh"]
-EXPOSE 3000
-
-CMD ["rails", "server", "-b", "0.0.0.0"]
-
-FROM base as production
-
-ENV RAILS_ENV=production
-ENV RAILS_LOG_TO_STDOUT=true
-ENV RAILS_SERVE_STATIC_FILES=enabled
-ENV AWS_REGION=ap-northeast-1
-
-CMD ["sh", "./startup_production.sh"]
-
+ENTRYPOINT [ "entrypoint.sh" ]
 EXPOSE 3000
