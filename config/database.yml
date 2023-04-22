@@ -11,6 +11,13 @@ development:
   username: <%= ENV.fetch("DB_DEVELOPMENT_USERNAME") {Rails.application.credentials.database[:development_username]} %>
   password: <%= ENV.fetch("DB_DEVELOPMENT_PASSWORD") {Rails.application.credentials.database[:development_password]} %>
 
+test:
+  <<: *default
+  host: <%= ENV.fetch("DB_TEST_HOST") {Rails.application.credentials.database[:test_host]} %>
+  database: <%= ENV.fetch("DB_TEST_DATABASE") {Rails.application.credentials.database[:test_db_name]} %>
+  username: <%= ENV.fetch("DB_TEST_USERNAME") {Rails.application.credentials.database[:test_username]} %>
+  password: <%= ENV.fetch("DB_TEST_PASSWORD") {Rails.application.credentials.database[:test_password]} %>
+
 production:
   <<: *default
   host: <%= ENV.fetch("DB_PRODUCTION_HOST") {Rails.application.credentials.database[:production_host]} %>
